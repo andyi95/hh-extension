@@ -1,0 +1,3 @@
+[tool.tortoise]
+# Конфиг для встроенного CLI миграций: python -m tortoise makemigrations / migrate
+tortoise_orm = "app.db.TORTOISE_ORM"
