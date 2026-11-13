@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 from tortoise import timezone
+from tortoise.functions import Count
 from tortoise.transactions import in_transaction
 
 from app.api.deps import CurrentUser, PageParams
@@ -10,13 +11,18 @@ from app.schemas.applications import (
     ApplicationCreate,
     ApplicationDetailOut,
     ApplicationOut,
+    ApplicationStats,
     ApplicationUpdate,
     StatusCreate,
     StatusOut,
+    SyncIn,
+    SyncResult,
 )
 from app.schemas.common import Page
-from app.services.applications import recalc_current_status
+from app.services.applications import recalc_current_status, sync_applications
 from app.services.catalog import upsert_vacancy
+
+HhIdQuery = Query(pattern=r"^\d{1,20}$")
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
@@ -64,13 +70,16 @@ async def list_applications(
     user: CurrentUser,
     page: PageParams,
     status_: Annotated[ApplicationStatusEnum | None, Query(alias="status")] = None,
-    vacancy_hh_id: Annotated[str | None, Query(pattern=r"^\d{1,20}$")] = None,
+    vacancy_hh_id: Annotated[str | None, HhIdQuery] = None,
+    company_hh_id: Annotated[str | None, HhIdQuery] = None,
 ):
     query = Application.filter(user=user)
     if status_ is not None:
         query = query.filter(current_status=status_)
     if vacancy_hh_id is not None:
         query = query.filter(vacancy__hh_id=vacancy_hh_id)
+    if company_hh_id is not None:
+        query = query.filter(vacancy__company__hh_id=company_hh_id)
 
     total = await query.count()
     items = (
@@ -82,6 +91,25 @@ async def list_applications(
     return Page[ApplicationOut](
         items=[ApplicationOut.model_validate(a) for a in items], total=total
     )
+
+
+@router.get("/stats", response_model=ApplicationStats)
+async def application_stats(user: CurrentUser):
+    """Количество своих откликов по текущему статусу."""
+    rows = (
+        await Application.filter(user=user)
+        .annotate(count=Count("id"))
+        .group_by("current_status")
+        .values("current_status", "count")
+    )
+    by_status = {row["current_status"]: row["count"] for row in rows}
+    return ApplicationStats(total=sum(by_status.values()), by_status=by_status)
+
+
+@router.post("/sync", response_model=SyncResult)
+async def sync(body: SyncIn, user: CurrentUser):
+    """Импорт и обновление откликов со страницы Отклики hh.ru."""
+    return await sync_applications(user, body.items)
 
 
 @router.get("/{application_id}", response_model=ApplicationDetailOut)

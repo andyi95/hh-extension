@@ -51,13 +51,16 @@ async def upsert_vacancy(hh_id: str, data: VacancyIn) -> Vacancy:
             await vacancy.fetch_related("company")
             return vacancy
 
-    vacancy.title = data.title
-    vacancy.url = data.url
+    changes: dict = {"title": data.title, "url": data.url}
     if data.description is not None:
-        vacancy.description = data.description
+        changes["description"] = data.description
     if company is not None:
-        vacancy.company = company
-    await vacancy.save()
+        changes["company_id"] = company.id
+    # Пишем только при изменениях: синхронизация «Откликов» вызывает upsert на каждый отклик.
+    changed = {k: v for k, v in changes.items() if getattr(vacancy, k) != v}
+    if changed:
+        vacancy.update_from_dict(changed)
+        await vacancy.save(update_fields=[*changed, "updated_at"])
     await vacancy.fetch_related("company")
     return vacancy
 

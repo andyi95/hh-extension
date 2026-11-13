@@ -58,7 +58,9 @@ Docstring модели становится комментарием табли�
 | GET | `/vacancies/{hh_id}`, `/companies/{hh_id}` | карточка + публичный рейтинг (без авторизации) |
 | GET | `/vacancies/{hh_id}/reviews`, `/companies/{hh_id}/reviews` | публичные отзывы (без авторизации) |
 | POST | `/applications` | отклик + данные вакансии одним запросом |
-| GET | `/applications?vacancy_hh_id=&status=` | свои отклики; по `vacancy_hh_id` — «откликались ли на эту вакансию» |
+| GET | `/applications?vacancy_hh_id=&company_hh_id=&status=` | свои отклики; по `vacancy_hh_id` — «откликались ли на эту вакансию», по `company_hh_id` — отклики в компанию |
+| GET | `/applications/stats` | количество своих откликов по статусам |
+| POST | `/applications/sync` | импорт со страницы «Отклики» hh.ru (до 100 за раз); статус только продвигается вперёд, `rejected`/`closed` финальные |
 | POST/DELETE | `/applications/{id}/statuses[/{status_id}]` | история статусов |
 | POST/GET/PATCH/DELETE | `/reviews` | свои отзывы |
 

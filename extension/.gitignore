@@ -1,0 +1,12 @@
+node_modules
+.output
+.wxt
+stats.html
+stats-*.json
+web-ext.config.ts
+*.log
+.env
+.env.local
+
+# Корневой .gitignore (шаблон Python) игнорирует любые lib/ — здесь это исходники.
+!/lib/

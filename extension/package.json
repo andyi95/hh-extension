@@ -1,0 +1,24 @@
+{
+  "name": "hh-tracker-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Трекинг откликов и отзывы о вакансиях и работодателях на hh.ru",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "compile": "tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "preact": "^11.2.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "@wxt-dev/auto-icons": "^1.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.1.5",
+    "wxt": "^0.21.5"
+  }
+}

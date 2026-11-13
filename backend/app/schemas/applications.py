@@ -47,3 +47,26 @@ class ApplicationOut(BaseModel):
 
 class ApplicationDetailOut(ApplicationOut):
     statuses: list[StatusOut]
+
+
+class ApplicationStats(BaseModel):
+    total: int
+    by_status: dict[ApplicationStatusEnum, int]
+
+
+class SyncItem(BaseModel):
+    """Отклик со страницы «Отклики» hh.ru; статус уже переведён в наш формат расширением."""
+    vacancy: VacancyUpsertIn
+    status: ApplicationStatusEnum
+    applied_at: UtcDatetime | None = None
+    changed_at: UtcDatetime | None = None
+
+
+class SyncIn(BaseModel):
+    items: list[SyncItem] = Field(max_length=100)
+
+
+class SyncResult(BaseModel):
+    created: int = 0
+    updated: int = 0
+    unchanged: int = 0
